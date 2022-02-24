@@ -14,6 +14,7 @@ class InsertTime:
         self.engine = engine
         self.n_reps = n_reps
         self.log = {}
+        self.length = len(df)
 
     def change_engine(self, engine):
         self.engine = engine
@@ -38,7 +39,7 @@ class InsertTime:
             )
 
             print(
-                f"Averge elapsed time across {self.n_reps} runs: {elapsed_time/self.n_reps}"
+                f"Average elapsed time across {self.n_reps} runs: {elapsed_time/self.n_reps}"
             )
             return {
                 "n_reps:": self.n_reps,
@@ -69,7 +70,7 @@ class InsertTime:
 
     @staticmethod
     def callable_1b(table, conn, keys, data_iter):
-        """Approximates the 'default' pd.to_sql behavior"""
+        """Approximates the psycopg2 execute_values methid"""
         # https://stackoverflow.com/questions/8134602/psycopg2-insert-multiple-rows-with-one-query
         dbapi_conn = conn.connection
         cols = ", ".join(keys)
@@ -94,7 +95,7 @@ class InsertTime:
                 cur=cur,
                 sql=f"INSERT INTO {table.name} ({cols}) VALUES %s",
                 argslist=tuple(data_iter),
-                page_size=100
+                page_size=100,
             )
 
     @staticmethod
@@ -142,17 +143,42 @@ class InsertTime:
     def run_comparison(self):
         """Compare the different ways to insert data"""
         self.log["default"] = self.time_to_insert(callable=None, chunksize=None)
-        self.log["default_2"] = self.time_to_insert(callable=self.callable_1, chunksize=None)
-        self.log["copy_savefile"] = self.time_to_insert(callable=self.callable_2)
+        self.log["default_chunks_10"] = self.time_to_insert(callable=None, chunksize=10)
+        if self.length > 100:
+            self.log["default_chunks_100"] = self.time_to_insert(callable=None, chunksize=100)
+        if self.length > 1000:
+            self.log["default_chunks_1000"] = self.time_to_insert(callable=None, chunksize=1000)
+        if self.length > 10000:
+            self.log["default_chunks_10000"] = self.time_to_insert(callable=None, chunksize=10000)
+        if self.length > 100000:
+            self.log["default_chunks_100000"] = self.time_to_insert(callable=None, chunksize=100000)
+        if self.length > 1000000:
+            self.log["default_chunks_1000000"] = self.time_to_insert(callable=None, chunksize=1000000)
+        self.log["execute_values"] = self.time_to_insert(
+            callable=self.callable_1c, chunksize=None
+        )
+        # self.log["default_2"] = self.time_to_insert(callable=self.callable_1, chunksize=None)
+        self.log["copy_savefile"] = self.time_to_insert(
+            callable=self.callable_2
+        )
         os.remove("tmp.csv")
         self.log["copy_buffer"] = self.time_to_insert(callable=self.callable_3)
+        self.log["copy_buffer_chunks_10"] = self.time_to_insert(callable=self.callable_3, chunksize=10)
+        if self.length > 100:
+            self.log["copy_buffer_chunks_100"] = self.time_to_insert(callable=self.callable_3, chunksize=100)
+        if self.length > 1000:
+            self.log["copy_buffer_chunks_1000"] = self.time_to_insert(callable=self.callable_3, chunksize=1000)
+        if self.length > 10000:
+            self.log["copy_buffer_chunks_10000"] = self.time_to_insert(callable=self.callable_3, chunksize=10000)
+        if self.length > 100000:
+            self.log["copy_buffer_chunks_100000"] = self.time_to_insert(callable=self.callable_3, chunksize=100000)
+        if self.length > 1000000:
+            self.log["copy_buffer_chunks_1000000"] = self.time_to_insert(callable=self.callable_3, chunksize=1000000)
+
+
         self.log["unlogged"] = self.time_to_insert(callable=self.callable_4)
         self.set_logged()
-
-        self.log["execute_multi"] = self.time_to_insert(callable=self.callable_1a, chunksize=None)
-        self.log["mogrify"] = self.time_to_insert(callable=self.callable_1b, chunksize=100)
-        self.log["execute_values"] = self.time_to_insert(
-             callable=self.callable_1c, chunksize=None
-        )
+        # self.log["execute_multi"] = self.time_to_insert(callable=self.callable_1a, chunksize=None)
+        # self.log["mogrify"] = self.time_to_insert(callable=self.callable_1b, chunksize=100)
 
         return self.log

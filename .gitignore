@@ -135,3 +135,7 @@ data/
 # notebooks
 *.ipynb
 test_process.py
+
+# bitio resources
+resources/
+figures/
