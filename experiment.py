@@ -15,17 +15,17 @@ from time_to_insert import InsertTime
 N_REPS = 5
 
 if __name__ == "__main__":
-    # Connection Details
+    # Add Your Own Connection Details
     conn_dict = {
         "host": "localhost",
         "port": "5432",
         "database": "pd_test",
-        "user": "danielliden",
+        "user": "username",
         "password": "",
     }
 
     # load data
-    dfs = {f"df1e{i}":pd.read_csv(f"./data/sims/sim_data_{int(10**i)}.csv") for i in range(2, 6)}
+    dfs = {f"df1e{i}":pd.read_csv(f"./data/sims/sim_data_{int(10**i)}.csv") for i in range(2, 8)}
     # create engine
     engine = create_engine(
         f"postgresql+psycopg2://{conn_dict['user']}:{conn_dict['password']}@{conn_dict['host']}:{conn_dict['port']}/{conn_dict['database']}"
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     
     # concatenate results and save to CSV
     out = pd.concat(out, axis=0)
-    out.to_csv("./data/prelim_02242022.csv")
+    out.to_csv("./data/for_analysis_02242022.csv")
 
     print(out)
 

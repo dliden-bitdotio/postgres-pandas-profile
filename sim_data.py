@@ -42,7 +42,7 @@ def save_data(df, path, name):
 if __name__ == "__main__":
     sizes = [int(a) for a in [1e2, 1e3, 1e4, 1e5, 1e6, 1e7]]
     seed = 42
-    path = "./data/"
+    path = "./data/sims/"
 
     # Generate CSVs for use in the analysis.
 
